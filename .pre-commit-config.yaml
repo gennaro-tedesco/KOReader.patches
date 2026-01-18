@@ -3,11 +3,3 @@ repos:
     rev: v0.14.3
     hooks:
       - id: stylua
-  - repo: local
-    hooks:
-      - id: unittest
-        name: unittest
-        entry: busted
-        language: system
-        args: [-C=lua]
-        pass_filenames: false

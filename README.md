@@ -1,5 +1,7 @@
 ## KOReader patches
 
+<a href="https://koreader.rocks"><img src="https://raw.githubusercontent.com/koreader/koreader.github.io/master/koreader-logo.png" alt="KOReader" width="50%"></a>
+
 ### A collection of personal patches for KOReader
 
 ### [2-tidy-dict.lua](2-tidy-dict.lua)
@@ -11,19 +13,17 @@ This patch renders the dictionary popup more tidily, only showing the "Highlight
 <details>
   <summary>Show example</summary>
 
-<img width="400" src="">
-<img width="400" src="">
+<img width="400" src="https://github.com/user-attachments/assets/d2b235ca-c73f-4c1e-a124-1c67ece87946">
 </details>
 
 ### [2-distributed-progress-bar.lua](2-distributed-progress-bar.lua)
 
-This patch distributes the progress bar elements in the footer so that they are equally spaced and justified.
+This patch distributes the progress bar elements in the footer so that they are equally spaced and justified. Notice that for this patch to work you need to remove the "Dynamic filler" element (generally used to achieve spacing in the footer).
 
 ## Example
 
 <details>
   <summary>Show example</summary>
 
-<img width="400" src="">
-<img width="400" src="">
+<img width="400" src="https://github.com/user-attachments/assets/3330bfcd-ff6f-4572-b234-bef6b084504e">
 </details>
