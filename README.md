@@ -27,3 +27,7 @@ This patch distributes the progress bar elements in the footer so that they are 
 
 <img width="400" src="https://github.com/user-attachments/assets/3330bfcd-ff6f-4572-b234-bef6b084504e">
 </details>
+
+### [2-footer-glyphs.lua](2-footer-glyphs.lua)
+
+This patch allows to change the glyphs used as icons for the progress bar elements. Change at your will modifying the source file.
