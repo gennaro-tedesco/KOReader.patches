@@ -8,7 +8,7 @@
 
 This patch renders the dictionary popup more tidily, only showing the "Highlight" and "Translation" buttons (normaly hidden behind few more clicks) and re-draws previous/next arrows with counter in the between.
 
-## Example
+### Example
 
 <details>
   <summary>Show example</summary>
@@ -20,7 +20,7 @@ This patch renders the dictionary popup more tidily, only showing the "Highlight
 
 This patch distributes the progress bar elements in the footer so that they are equally spaced and justified. Notice that for this patch to work you need to remove the "Dynamic filler" element (generally used to achieve spacing in the footer).
 
-## Example
+### Example
 
 <details>
   <summary>Show example</summary>
