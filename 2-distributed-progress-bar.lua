@@ -44,6 +44,7 @@ function ReaderFooter:_updateFooterText(force_repaint, full_repaint)
 	end
 
 	local widgets = {}
+	local widths = {}
 	local total_width = 0
 	for _, text in ipairs(items) do
 		local w = TextWidget:new({
@@ -52,7 +53,9 @@ function ReaderFooter:_updateFooterText(force_repaint, full_repaint)
 			bold = self.settings.text_font_bold,
 		})
 		table.insert(widgets, w)
-		total_width = total_width + w:getSize().w
+		local width = w:getSize().w
+		table.insert(widths, width)
+		total_width = total_width + width
 	end
 
 	if total_width > max_text_width then
@@ -62,13 +65,24 @@ function ReaderFooter:_updateFooterText(force_repaint, full_repaint)
 		return orig_updateFooterText(self, force_repaint, full_repaint)
 	end
 
-	local spacing = math.floor((max_text_width - total_width) / (#widgets - 1))
+	local positions = {}
+	positions[1] = 0
+	positions[#widgets] = max_text_width - widths[#widgets]
+
+	for i = 2, #widgets - 1 do
+		local target_center = (i - 1) * max_text_width / (#widgets - 1)
+		positions[i] = target_center - widths[i] / 2
+	end
+
 	local group = HorizontalGroup:new({})
-	for i, w in ipairs(widgets) do
-		table.insert(group, w)
-		if i < #widgets then
-			table.insert(group, HorizontalSpan:new({ width = spacing }))
+	for i = 1, #widgets do
+		if i > 1 then
+			local gap = math.floor(positions[i] - positions[i - 1] - widths[i - 1])
+			if gap > 0 then
+				table.insert(group, HorizontalSpan:new({ width = gap }))
+			end
 		end
+		table.insert(group, widgets[i])
 	end
 
 	if self.footer_text.free then
