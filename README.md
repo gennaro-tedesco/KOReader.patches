@@ -44,3 +44,7 @@ This patch changes the fonts for the general UI menu appearance together with th
 ### [2-footer-glyphs.lua](2-footer-glyphs.lua)
 
 This patch allows to change the glyphs used as icons for the progress bar elements. Change at your will modifying the source file.
+
+### [2-delete-bookmarks](2-delete-bookmarks.lua)
+
+This patch adds a new button in the bookmarks menu to delete all bookmarks at once. Consider adding the corresponding icon from `icons/delete-bookmarks.svg`
