@@ -1,3 +1,6 @@
+local logger = require("logger")
+logger.info("Applying custom UI fonts patch")
+
 local ReaderFont = require("apps/reader/modules/readerfont")
 local Font = require("ui/font")
 local FontList = require("fontlist")
@@ -14,14 +17,6 @@ local DictQuickLookup = require("ui/widget/dictquicklookup")
 -- 1. SHARED LOGIC
 --------------------------------------------------------------------------------
 
--- Helper to generate a font selection menu table
--- @param reader_font_instance: the ReaderFont instance (self)
--- @param options: table with configuration:
---    setting_key_path (string): name of setting to save the filename/path to (e.g. "uifont_path")
---    setting_key_name (string): name of setting to save the nice name to (e.g. "uifont_name")
---    save_path_as_name (boolean): if true, saves the font name into the path key (for dict behavior)
---    restart_on_change (boolean): if true, prompts for restart. If false, refreshes UI.
---    mark_active_func (function): returns true if the font is currently active
 local function getGenericFontTable(reader_font_instance, options)
 	local fonts_table = {}
 	local cre = require("document/credocument"):engineInit()
@@ -251,3 +246,5 @@ for i, item_id in ipairs(original_typeset_order) do
 		table.insert(menu_order.typeset, "ui_font")
 	end
 end
+
+logger.info("Custom UI fonts patch applied")
