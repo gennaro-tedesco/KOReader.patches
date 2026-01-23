@@ -28,6 +28,19 @@ This patch distributes the progress bar elements in the footer so that they are 
 <img width="400" src="https://github.com/user-attachments/assets/3330bfcd-ff6f-4572-b234-bef6b084504e">
 </details>
 
+### [2-custom-ui-fonts](2-custom-ui-fonts.lua)
+
+This patch changes the fonts for the general UI menu appearance together with the dictionary body text by hooking into the style css directly. Two new menu entries are introduced to allow the user to select book text, UI and dictionary fonts independently
+
+### Example
+
+<details>
+  <summary>Show example</summary>
+
+<img width="400" src="https://github.com/user-attachments/assets/1f8ec946-b588-486f-9beb-5631aa537060">
+<img width="400" src="https://github.com/user-attachments/assets/e143d677-53e8-4931-9dbc-81635d5347be">
+</details>
+
 ### [2-footer-glyphs.lua](2-footer-glyphs.lua)
 
 This patch allows to change the glyphs used as icons for the progress bar elements. Change at your will modifying the source file.
