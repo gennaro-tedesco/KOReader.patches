@@ -48,3 +48,7 @@ This patch allows to change the glyphs used as icons for the progress bar elemen
 ### [2-delete-bookmarks](2-delete-bookmarks.lua)
 
 This patch adds a new button in the bookmarks menu to delete all bookmarks at once. Consider adding the corresponding icon from `icons/delete-bookmarks.svg`
+
+### [2-stats](2-stats.lua)
+
+This patch is my personal version of the original by [zenixlabs](https://github.com/zenixlabs/koreader-frankenpatches-public) where I had adapted and simplified the UI to my liking.
