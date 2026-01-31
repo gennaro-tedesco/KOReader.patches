@@ -51,7 +51,7 @@ This patch adds a new button in the bookmarks menu to delete all bookmarks at on
 
 ### [2-stats](2-stats.lua)
 
-This patch is my personal version of the original by [zenixlabs](https://github.com/zenixlabs/koreader-frankenpatches-public) where I have adapted and simplified the UI to my liking.
+This patch is my personal version of the original by [zenixlabs](https://github.com/zenixlabs/koreader-frankenpatches-public) where I have adapted and simplified the UI to my liking. For this patch to work do not forget to download the icons `icons/chapter.svg`, `icons/book_progress.svg` and `icons/reading.svg`
 
 ### Example
 
