@@ -59,7 +59,7 @@ function quicklookwindow:init()
 	local book_percentage = 0
 	if self.ui.document then
 		book_page = self.state.page or 1 -- Current page
-		book_total = self.ui.doc_settings.data.doc_pages or 1
+		book_total = self.ui.document:getPageCount() or 1 -- Use footer's method
 		book_left = book_total - book_page
 		book_percentage = (book_page / book_total) * 100 -- Format like %.1f in header_string below
 	end
@@ -89,6 +89,16 @@ function quicklookwindow:init()
 	if self.ui.pagemap and self.ui.pagemap:wantsPageLabels() then
 		book_page = self.ui.pagemap:getCurrentPageLabel(true) -- these two are strings.
 		book_total = self.ui.pagemap:getLastPageLabel(true)
+	end
+
+	-- HIDDEN FLOWS (matches footer's getBookProgress method)
+
+	if self.ui.document and self.ui.document.hasHiddenFlows and self.ui.document:hasHiddenFlows() then
+		local flow = self.ui.document:getPageFlow(book_pageturn)
+		local page_in_flow = self.ui.document:getPageNumberInFlow(book_pageturn)
+		local pages_in_flow = self.ui.document:getTotalPagesInFlow(flow)
+		book_pageturn = page_in_flow
+		book_pageturn_total = pages_in_flow
 	end
 
 	local screen_width = Screen:getWidth()
