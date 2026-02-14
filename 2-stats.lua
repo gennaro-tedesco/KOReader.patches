@@ -301,6 +301,13 @@ function quicklookwindow:init()
 		local timeReadToday_str, pagesReadToday_str = "", ""
 		if self.ui.document then
 			timeReadToday, pagesReadToday = ReaderStatistics:getTodayBookStats() -- stats for today across all books
+			if self.ui.pagemap and self.ui.pagemap:wantsPageLabels() then
+				local book_total_num = tonumber(book_total)
+				local renderer_total = self.ui.document:getPageCount()
+				if book_total_num and renderer_total > 0 then
+					pagesReadToday = math.ceil(pagesReadToday * book_total_num / renderer_total)
+				end
+			end
 			timeReadToday_str = string.format("%s today", secsToTimestring(timeReadToday))
 			pagesReadToday_str = T(N_("1 ", "%1 ", pagesReadToday), pagesReadToday)
 		end
