@@ -127,13 +127,31 @@ function DictQuickLookup:getHtmlDictionaryCss()
 		local font_filename, font_faceindex = cre.getFontFaceFilenameAndFaceIndex(selected_font)
 		if font_filename then
 			local css_justify = G_reader_settings:nilOrTrue("dict_justify") and "text-align: justify;" or ""
-			local css = [[
-                @font-face {
-                    font-family: 'DictCustomFont';
-                    src: url(']] .. font_filename .. [[');
-                }
+			local face_css = "@font-face { font-family: 'DictCustomFont'; src: url('" .. font_filename .. "') }\n"
+			local seen = { [font_filename] = true }
+			local variants = {
+				{ bold = false, italic = true, style = "; font-style: italic" },
+				{ bold = true, italic = false, style = "; font-weight: bold" },
+				{ bold = true, italic = true, style = "; font-weight: bold; font-style: italic" },
+			}
+			for _, v in ipairs(variants) do
+				local path = cre.getFontFaceFilenameAndFaceIndex(selected_font, v.bold, v.italic)
+				if path and not seen[path] then
+					seen[path] = true
+					face_css = face_css
+						.. "@font-face { font-family: 'DictCustomFont'; src: url('"
+						.. path
+						.. "')"
+						.. v.style
+						.. " }\n"
+				end
+			end
+			local css = face_css
+				.. [[
                 @page { margin: 0; font-family: 'DictCustomFont'; }
-                body { margin: 0; line-height: 1.3; font-family: 'DictCustomFont'; ]] .. css_justify .. [[ }
+                body { margin: 0; line-height: 1.3; font-family: 'DictCustomFont'; ]]
+				.. css_justify
+				.. [[ }
                 blockquote, dd { margin: 0 1em; }
                 ol, ul, menu { margin: 0; padding: 0 1.7em; }
             ]]
