@@ -51,7 +51,7 @@ This patch adds a new button in the bookmarks menu to delete all bookmarks at on
 
 ### [2-stats](2-stats.lua)
 
-This patch is my personal version of the original by [zenixlabs](https://github.com/zenixlabs/koreader-frankenpatches-public) where I have adapted and simplified the UI to my liking. For this patch to work do not forget to download the icons `icons/chapter.svg`, `icons/book_progress.svg` and `icons/reading.svg`
+This patch is my personal version of the original by [zenixlabs](https://github.com/zenixlabs/koreader-frankenpatches-public) where I have adapted and simplified the UI to my liking. For this patch to work do not forget to download the icons `icons/chapter.svg`, `icons/book_progress.svg` and `icons/reading.svg`. The suggested way to use such patch is to assign it a gesture from the gestures menu (I use spreach and pinch).
 
 ### Example
 
@@ -59,4 +59,16 @@ This patch is my personal version of the original by [zenixlabs](https://github.
   <summary>Show example</summary>
 
 <img width="400" src="https://github.com/user-attachments/assets/2dbd8bda-a89b-4a4f-bd39-d18b800b5eb4">
+</details>
+
+### [2-reading-stats](2-reading-stats.lua)
+
+Similar to the aforementioned `2-stats.lua` patch, this one provides a barplot of the aggregated reading time in the last days. For this patch to work do not forget to download the icons `icons/calendar.svg`, and `icons/reading.svg`. The suggested way to use such patch is to assign it a gesture from the gestures menu (I use spreach and pinch).
+
+### Example
+
+<details>
+  <summary>Show example</summary>
+
+<img width="400" src="https://github.com/user-attachments/assets/31409e95-1306-4c02-bb97-e7d4474de34e">
 </details>
