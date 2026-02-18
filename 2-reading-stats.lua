@@ -1,5 +1,5 @@
 local logger = require("logger")
-logger.info("Applying reading stats patch")
+logger.info("Applying reading hours daily patch")
 
 local Blitbuffer = require("ffi/blitbuffer")
 local CenterContainer = require("ui/widget/container/centercontainer")
@@ -36,8 +36,10 @@ local ReadingHoursWindow = InputContainer:extend({
 function ReadingHoursWindow:init()
 	local screen_width = Screen:getWidth()
 	local screen_height = Screen:getHeight()
-	local w_width = math.floor(screen_width * 0.8)
-	local w_height = math.floor(screen_height * 0.8)
+	local w_width = math.floor(screen_width / 2)
+	if screen_width > screen_height then
+		w_width = math.floor(w_width * screen_height / screen_width)
+	end
 
 	local w_font = {
 		face = "cfont",
@@ -79,6 +81,13 @@ function ReadingHoursWindow:init()
 		else
 			return string.format("%dh %dm", h, m)
 		end
+	end
+
+	local function getWidth(text, size)
+		local t = textt(text, size)
+		local width = t:getSize().w
+		t:free()
+		return width
 	end
 
 	local function buildWindow()
@@ -130,7 +139,10 @@ function ReadingHoursWindow:init()
 
 		local scrollbar_width = ScrollableContainer:getScrollbarWidth()
 		local content_width = w_width - scrollbar_width
-		local bar_max_width = content_width - Screen:scaleBySize(130)
+		local date_width = Screen:scaleBySize(60)
+		local spacing_total = Screen:scaleBySize(20)
+		local estimated_time_width = Screen:scaleBySize(60)
+		local bar_max_width = content_width - date_width - spacing_total - estimated_time_width
 		local rows = VerticalGroup:new({})
 
 		for i = #result.date, 1, -1 do
@@ -206,9 +218,13 @@ function ReadingHoursWindow:init()
 		})
 
 		local row_height = Screen:scaleBySize(20) + math.floor(w_padding.internal * 0.5)
-		local content_height = #result.date * row_height
-		local max_height = math.floor(screen_height * 0.6)
-		local scrollable_height = math.min(content_height, max_height)
+		local num_items = #result.date
+		local scrollable_height
+		if num_items <= 10 then
+			scrollable_height = num_items * row_height
+		else
+			scrollable_height = 10 * row_height
+		end
 
 		local scrollable = ScrollableContainer:new({
 			dimen = Geom:new({
@@ -286,7 +302,7 @@ end
 Dispatcher:registerAction("show_reading_hours_daily", {
 	category = "none",
 	event = "ShowReadingHoursDaily",
-	title = _("Show reading hours (daily)"),
+	title = _("reading times stats"),
 	general = true,
 })
 
@@ -295,4 +311,4 @@ function ReaderUI:onShowReadingHoursDaily()
 	UIManager:show(widget, "ui", widget.dimen)
 end
 
-logger.info("Reading stats patch applied")
+logger.info("Reading hours daily patch applied")
