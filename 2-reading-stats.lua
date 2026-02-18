@@ -27,12 +27,15 @@ local VerticalGroup = require("ui/widget/verticalgroup")
 local VerticalSpan = require("ui/widget/verticalspan")
 local _ = require("gettext")
 
+local show_all_days_state = false
+
 local ReadingHoursWindow = InputContainer:extend({
 	modal = true,
 	name = "reading_hours_window",
 })
 
 function ReadingHoursWindow:init()
+	self.show_all_days = show_all_days_state
 	local screen_width = Screen:getWidth()
 	local screen_height = Screen:getHeight()
 	local w_width = math.floor(screen_width * 0.7)
@@ -94,22 +97,49 @@ function ReadingHoursWindow:init()
 			return nil, "Statistics database not found"
 		end
 
-		local cutoff_days = 180
-		local cutoff_time = os.time() - (cutoff_days * 86400)
+		local seconds_in_day = 86400
+		local days_to_show = 30
+		local days_lookback = 180
+		local cutoff_time = os.time() - (days_lookback * seconds_in_day)
 
-		local sql_stmt = string.format(
-			[[
-                SELECT
-                    strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') AS date,
-                    ROUND(SUM(duration), 0) AS seconds
-                FROM page_stat
-                WHERE start_time > %d
-                GROUP BY date
-                ORDER BY date DESC
-                LIMIT 30;
-        ]],
-			cutoff_time
-		)
+		local sql_stmt
+		if self.show_all_days then
+			sql_stmt = string.format(
+				[[
+                    WITH RECURSIVE dates(ts_start) AS (
+                        SELECT unixepoch('now', 'localtime', 'start of day')
+                        UNION ALL
+                        SELECT ts_start - %d FROM dates LIMIT %d
+                    )
+                    SELECT
+                        strftime('%%Y-%%m-%%d', ts_start, 'unixepoch') AS date,
+                        COALESCE(ROUND(SUM(duration), 0), 0) AS seconds
+                    FROM dates
+                    LEFT JOIN page_stat ON start_time >= ts_start
+                                       AND start_time < ts_start + %d
+                    GROUP BY ts_start
+                    ORDER BY ts_start DESC;
+                ]],
+				seconds_in_day,
+				days_to_show,
+				seconds_in_day
+			)
+		else
+			sql_stmt = string.format(
+				[[
+                    SELECT
+                        strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') AS date,
+                        ROUND(SUM(duration), 0) AS seconds
+                    FROM page_stat
+                    WHERE start_time > %d
+                    GROUP BY date
+                    ORDER BY date DESC
+                    LIMIT %d;
+            ]],
+				cutoff_time,
+				days_to_show
+			)
+		end
 
 		local ok, result = pcall(conn.exec, conn, sql_stmt)
 		conn:close()
@@ -127,7 +157,11 @@ function ReadingHoursWindow:init()
 		end
 
 		if max_seconds == 0 then
-			return nil, "No reading statistics available"
+			if self.show_all_days then
+				max_seconds = 1
+			else
+				return nil, "No reading statistics available"
+			end
 		end
 
 		local scrollbar_width = ScrollableContainer:getScrollbarWidth()
@@ -139,7 +173,7 @@ function ReadingHoursWindow:init()
 			local date_str = tostring(result.date[i])
 			local seconds = tonumber(result.seconds[i])
 
-			if date_str and seconds then
+			if date_str and seconds ~= nil then
 				local timestamp = os.time({
 					year = tonumber(date_str:sub(1, 4)),
 					month = tonumber(date_str:sub(6, 7)),
@@ -149,7 +183,7 @@ function ReadingHoursWindow:init()
 					sec = 0,
 				})
 				local date_label = os.date("%b %d", timestamp)
-				local time_str = secsToTimestring(seconds)
+				local time_str = seconds == 0 and "---" or secsToTimestring(seconds)
 
 				local date_widget = textt(date_label, w_font.size.small, w_font.color.black)
 				local time_widget = textt(time_str, w_font.size.small, w_font.color.black)
@@ -199,11 +233,30 @@ function ReadingHoursWindow:init()
 			width = icon_size,
 			height = icon_size,
 		})
-		local title = HorizontalGroup:new({
-			align = "center",
+
+		local toggle_button = IconWidget:new({
+			icon = "appbar.contrast",
+			width = icon_size,
+			height = icon_size,
+		})
+
+		local center_icons = HorizontalGroup:new({
 			icon1,
 			HorizontalSpan:new({ width = Screen:scaleBySize(5) }),
 			icon2,
+		})
+
+		local icons_width = center_icons:getSize().w
+		local toggle_width = toggle_button:getSize().w
+		local total_content = icons_width + toggle_width
+		local left_spacer = (content_width - total_content) / 2
+		local right_spacer = left_spacer
+
+		local title = HorizontalGroup:new({
+			HorizontalSpan:new({ width = left_spacer }),
+			center_icons,
+			HorizontalSpan:new({ width = right_spacer }),
+			toggle_button,
 		})
 
 		local row_height = Screen:scaleBySize(20) + math.floor(w_padding.internal * 0.5)
@@ -258,6 +311,16 @@ function ReadingHoursWindow:init()
 		h = screen_height,
 	})
 
+	local frame_dimen = frame:getSize()
+	local toggle_size = Screen:scaleBySize(30)
+	local toggle_padding = w_padding.external
+	self.toggle_area = Geom:new({
+		x = (screen_width - frame_dimen.w) / 2 + frame_dimen.w - toggle_size - toggle_padding,
+		y = (screen_height - frame_dimen.h) / 2 + toggle_padding,
+		w = toggle_size + toggle_padding,
+		h = toggle_size + toggle_padding,
+	})
+
 	if Device:hasDPad() then
 		self.key_events.Close = { { Device.input.group.Back } }
 	end
@@ -283,7 +346,15 @@ function ReadingHoursWindow:onClose()
 	return true
 end
 
-function ReadingHoursWindow:onTapClose()
+function ReadingHoursWindow:onTapClose(arg, ges_ev)
+	if self.toggle_area and ges_ev and ges_ev.pos then
+		if self.toggle_area:contains(ges_ev.pos) then
+			show_all_days_state = not show_all_days_state
+			UIManager:close(self)
+			UIManager:show(ReadingHoursWindow:new(), "ui")
+			return true
+		end
+	end
 	self:onClose()
 	return true
 end
