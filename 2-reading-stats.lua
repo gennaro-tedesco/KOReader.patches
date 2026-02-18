@@ -94,21 +94,22 @@ function ReadingHoursWindow:init()
 			return nil, "Statistics database not found"
 		end
 
-		local sql_stmt = [[
-			SELECT
-				dates AS date,
-				ROUND(SUM(sum_duration), 0) AS seconds
-			FROM (
-				SELECT
-					strftime('%Y-%m-%d', start_time, 'unixepoch', 'localtime') AS dates,
-					sum(duration) AS sum_duration
-				FROM page_stat
-				GROUP BY id_book, page, dates
-			)
-			GROUP BY dates
-			ORDER BY dates DESC
-			LIMIT 30;
-		]]
+		local cutoff_days = 180
+		local cutoff_time = os.time() - (cutoff_days * 86400)
+
+		local sql_stmt = string.format(
+			[[
+                SELECT
+                    strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') AS date,
+                    ROUND(SUM(duration), 0) AS seconds
+                FROM page_stat
+                WHERE start_time > %d
+                GROUP BY date
+                ORDER BY date DESC
+                LIMIT 30;
+        ]],
+			cutoff_time
+		)
 
 		local ok, result = pcall(conn.exec, conn, sql_stmt)
 		conn:close()
