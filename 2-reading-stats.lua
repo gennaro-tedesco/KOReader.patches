@@ -106,23 +106,22 @@ function ReadingHoursWindow:init()
 		if self.show_all_days then
 			sql_stmt = string.format(
 				[[
-                    WITH RECURSIVE dates(ts_start) AS (
-                        SELECT unixepoch('now', 'localtime', 'start of day')
+                    WITH RECURSIVE dates(date_str) AS (
+                        SELECT date('now', 'localtime')
                         UNION ALL
-                        SELECT ts_start - %d FROM dates LIMIT %d
+                        SELECT date(date_str, '-1 day') FROM dates LIMIT %d
                     )
                     SELECT
-                        strftime('%%Y-%%m-%%d', ts_start, 'unixepoch') AS date,
+                        date_str AS date,
                         COALESCE(ROUND(SUM(duration), 0), 0) AS seconds
                     FROM dates
-                    LEFT JOIN page_stat ON start_time >= ts_start
-                                       AND start_time < ts_start + %d
-                    GROUP BY ts_start
-                    ORDER BY ts_start DESC;
+                    LEFT JOIN page_stat ON strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') = date_str
+                        AND start_time > %d
+                    GROUP BY date_str
+                    ORDER BY date_str DESC;
                 ]],
-				seconds_in_day,
 				days_to_show,
-				seconds_in_day
+				cutoff_time
 			)
 		else
 			sql_stmt = string.format(
@@ -238,6 +237,7 @@ function ReadingHoursWindow:init()
 			icon = "appbar.contrast",
 			width = icon_size,
 			height = icon_size,
+			rotation_angle = self.show_all_days and 180 or 0,
 		})
 
 		local center_icons = HorizontalGroup:new({
