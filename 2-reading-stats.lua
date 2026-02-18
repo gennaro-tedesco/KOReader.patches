@@ -4,7 +4,6 @@ logger.info("Applying reading hours daily patch")
 local Blitbuffer = require("ffi/blitbuffer")
 local CenterContainer = require("ui/widget/container/centercontainer")
 local DataStorage = require("datastorage")
-local datetime = require("datetime")
 local Device = require("device")
 local Dispatcher = require("dispatcher")
 local Font = require("ui/font")
@@ -36,7 +35,7 @@ local ReadingHoursWindow = InputContainer:extend({
 function ReadingHoursWindow:init()
 	local screen_width = Screen:getWidth()
 	local screen_height = Screen:getHeight()
-	local w_width = math.floor(screen_width / 2)
+	local w_width = math.floor(screen_width * 0.7)
 	if screen_width > screen_height then
 		w_width = math.floor(w_width * screen_height / screen_width)
 	end
@@ -81,13 +80,6 @@ function ReadingHoursWindow:init()
 		else
 			return string.format("%dh %dm", h, m)
 		end
-	end
-
-	local function getWidth(text, size)
-		local t = textt(text, size)
-		local width = t:getSize().w
-		t:free()
-		return width
 	end
 
 	local function buildWindow()
@@ -139,13 +131,10 @@ function ReadingHoursWindow:init()
 
 		local scrollbar_width = ScrollableContainer:getScrollbarWidth()
 		local content_width = w_width - scrollbar_width
-		local date_width = Screen:scaleBySize(60)
-		local spacing_total = Screen:scaleBySize(20)
-		local estimated_time_width = Screen:scaleBySize(60)
-		local bar_max_width = content_width - date_width - spacing_total - estimated_time_width
+		local bar_max_width = content_width - Screen:scaleBySize(140)
 		local rows = VerticalGroup:new({})
 
-		for i = #result.date, 1, -1 do
+		for i = 1, #result.date do
 			local date_str = tostring(result.date[i])
 			local seconds = tonumber(result.seconds[i])
 
@@ -160,7 +149,6 @@ function ReadingHoursWindow:init()
 				})
 				local date_label = os.date("%b %d", timestamp)
 				local time_str = secsToTimestring(seconds)
-				local bar_width = math.floor((seconds / max_seconds) * bar_max_width)
 
 				local date_widget = textt(date_label, w_font.size.small, w_font.color.black)
 				local time_widget = textt(time_str, w_font.size.small, w_font.color.black)
