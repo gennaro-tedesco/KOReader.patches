@@ -164,7 +164,7 @@ function ReadingHoursWindow:init()
 					radius = Screen:scaleBySize(3),
 					bordersize = 0,
 					bgcolor = Blitbuffer.COLOR_WHITE,
-					fillcolor = Blitbuffer.COLOR_DARK_GRAY,
+					fillcolor = Blitbuffer.COLOR_BLACK,
 				})
 
 				local row = HorizontalGroup:new({
