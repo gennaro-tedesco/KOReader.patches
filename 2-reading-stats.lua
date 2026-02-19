@@ -102,65 +102,52 @@ function ReadingHoursWindow:init()
 		local days_lookback = 180
 		local cutoff_time = os.time() - (days_lookback * seconds_in_day)
 
-		local sql_stmt
-		if self.show_all_days then
-			sql_stmt = string.format(
-				[[
-                    WITH RECURSIVE dates(date_str) AS (
-                        SELECT date('now', 'localtime')
-                        UNION ALL
-                        SELECT date(date_str, '-1 day') FROM dates LIMIT %d
-                    )
-                    SELECT
-                        date_str AS date,
-                        COALESCE(ROUND(SUM(duration), 0), 0) AS seconds
-                    FROM dates
-                    LEFT JOIN page_stat ON strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') = date_str
-                        AND start_time > %d
-                    GROUP BY date_str
-                    ORDER BY date_str DESC;
-                ]],
-				days_to_show,
-				cutoff_time
-			)
-		else
-			sql_stmt = string.format(
-				[[
-                    SELECT
-                        strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') AS date,
-                        ROUND(SUM(duration), 0) AS seconds
-                    FROM page_stat
-                    WHERE start_time > %d
-                    GROUP BY date
-                    ORDER BY date DESC
-                    LIMIT %d;
+		local sql_stmt = string.format(
+			[[
+                SELECT
+                    strftime('%%Y-%%m-%%d', start_time, 'unixepoch', 'localtime') AS date,
+                    ROUND(SUM(duration), 0) AS seconds
+                FROM page_stat
+                WHERE start_time > %d
+                GROUP BY date
+                ORDER BY date DESC;
             ]],
-				cutoff_time,
-				days_to_show
-			)
-		end
+			cutoff_time
+		)
 
-		local ok, result = pcall(conn.exec, conn, sql_stmt)
+		local ok, pre_result = pcall(conn.exec, conn, sql_stmt)
 		conn:close()
 
-		if not ok or not result or not result.date then
+		if not ok or not pre_result or not pre_result.date then
 			return nil, "Failed to query statistics database"
 		end
 
+		local lookup = {}
+		for i = 1, #pre_result.date do
+			lookup[tostring(pre_result.date[i])] = tonumber(pre_result.seconds[i])
+		end
+
+		local required_dates = {}
+		local tm = os.time()
+		for i = 1, days_to_show do
+			local date_str = os.date("%Y-%m-%d", tm)
+			local seconds = lookup[date_str] or 0
+			if self.show_all_days or seconds > 0 then
+				table.insert(required_dates, { date_str, seconds })
+			end
+			tm = tm - seconds_in_day
+		end
+
 		local max_seconds = 0
-		for i = 1, #result.seconds do
-			local secs = tonumber(result.seconds[i])
-			if secs and secs > max_seconds then
+		for _, entry in ipairs(required_dates) do
+			local secs = entry[2]
+			if secs > max_seconds then
 				max_seconds = secs
 			end
 		end
 
 		if max_seconds == 0 then
-			if self.show_all_days then
-				max_seconds = 1
-			else
-				return nil, "No reading statistics available"
-			end
+			max_seconds = 1
 		end
 
 		local scrollbar_width = ScrollableContainer:getScrollbarWidth()
@@ -168,9 +155,9 @@ function ReadingHoursWindow:init()
 		local bar_max_width = content_width - Screen:scaleBySize(140)
 		local rows = VerticalGroup:new({})
 
-		for i = 1, #result.date do
-			local date_str = tostring(result.date[i])
-			local seconds = tonumber(result.seconds[i])
+		for _, entry in ipairs(required_dates) do
+			local date_str = entry[1]
+			local seconds = entry[2]
 
 			if date_str and seconds ~= nil then
 				local timestamp = os.time({
@@ -260,7 +247,7 @@ function ReadingHoursWindow:init()
 		})
 
 		local row_height = Screen:scaleBySize(20) + math.floor(w_padding.internal * 0.5)
-		local num_items = #result.date
+		local num_items = #required_dates
 		local scrollable_height
 		if num_items <= 10 then
 			scrollable_height = num_items * row_height
