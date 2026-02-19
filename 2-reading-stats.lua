@@ -27,15 +27,13 @@ local VerticalGroup = require("ui/widget/verticalgroup")
 local VerticalSpan = require("ui/widget/verticalspan")
 local _ = require("gettext")
 
-local show_all_days_state = false
-
 local ReadingHoursWindow = InputContainer:extend({
 	modal = true,
 	name = "reading_hours_window",
 })
 
 function ReadingHoursWindow:init()
-	self.show_all_days = show_all_days_state
+	self.show_all_days = G_reader_settings:readSetting("reading_hours_show_all_days") or false
 	local screen_width = Screen:getWidth()
 	local screen_height = Screen:getHeight()
 	local w_width = math.floor(screen_width * 0.7)
@@ -99,8 +97,7 @@ function ReadingHoursWindow:init()
 
 		local seconds_in_day = 86400
 		local days_to_show = 30
-		local days_lookback = 180
-		local cutoff_time = os.time() - (days_lookback * seconds_in_day)
+		local cutoff_time = os.time() - (days_to_show * seconds_in_day)
 
 		local sql_stmt = string.format(
 			[[
@@ -159,53 +156,51 @@ function ReadingHoursWindow:init()
 			local date_str = entry[1]
 			local seconds = entry[2]
 
-			if date_str and seconds ~= nil then
-				local timestamp = os.time({
-					year = tonumber(date_str:sub(1, 4)),
-					month = tonumber(date_str:sub(6, 7)),
-					day = tonumber(date_str:sub(9, 10)),
-					hour = 0,
-					min = 0,
-					sec = 0,
-				})
-				local date_label = os.date("%b %d", timestamp)
-				local time_str = seconds == 0 and "---" or secsToTimestring(seconds)
+			local timestamp = os.time({
+				year = tonumber(date_str:sub(1, 4)),
+				month = tonumber(date_str:sub(6, 7)),
+				day = tonumber(date_str:sub(9, 10)),
+				hour = 0,
+				min = 0,
+				sec = 0,
+			})
+			local date_label = os.date("%b %d", timestamp)
+			local time_str = seconds == 0 and "---" or secsToTimestring(seconds)
 
-				local date_widget = textt(date_label, w_font.size.small, w_font.color.black)
-				local time_widget = textt(time_str, w_font.size.small, w_font.color.black)
+			local date_widget = textt(date_label, w_font.size.small, w_font.color.black)
+			local time_widget = textt(time_str, w_font.size.small, w_font.color.black)
 
-				local bar = ProgressWidget:new({
-					width = bar_max_width,
-					height = Screen:scaleBySize(10),
-					percentage = seconds / max_seconds,
-					ticks = nil,
-					last = nil,
-					margin_h = 0,
-					margin_v = 0,
-					radius = Screen:scaleBySize(3),
-					bordersize = 0,
-					bgcolor = Blitbuffer.COLOR_WHITE,
-					fillcolor = Blitbuffer.COLOR_BLACK,
-				})
+			local bar = ProgressWidget:new({
+				width = bar_max_width,
+				height = Screen:scaleBySize(10),
+				percentage = seconds / max_seconds,
+				ticks = nil,
+				last = nil,
+				margin_h = 0,
+				margin_v = 0,
+				radius = Screen:scaleBySize(3),
+				bordersize = 0,
+				bgcolor = Blitbuffer.COLOR_WHITE,
+				fillcolor = Blitbuffer.COLOR_BLACK,
+			})
 
-				local row = HorizontalGroup:new({
-					align = "center",
-					LeftContainer:new({
-						dimen = Geom:new({ w = Screen:scaleBySize(60), h = Screen:scaleBySize(20) }),
-						date_widget,
-					}),
-					HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
-					bar,
-					HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
-					LeftContainer:new({
-						dimen = Geom:new({ w = Screen:scaleBySize(50), h = Screen:scaleBySize(20) }),
-						time_widget,
-					}),
-				})
+			local row = HorizontalGroup:new({
+				align = "center",
+				LeftContainer:new({
+					dimen = Geom:new({ w = Screen:scaleBySize(60), h = Screen:scaleBySize(20) }),
+					date_widget,
+				}),
+				HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
+				bar,
+				HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
+				LeftContainer:new({
+					dimen = Geom:new({ w = Screen:scaleBySize(50), h = Screen:scaleBySize(20) }),
+					time_widget,
+				}),
+			})
 
-				table.insert(rows, row)
-				table.insert(rows, vertical_spacing(0.5))
-			end
+			table.insert(rows, row)
+			table.insert(rows, vertical_spacing(0.5))
 		end
 
 		local icon_size = Screen:scaleBySize(30)
@@ -333,16 +328,19 @@ function ReadingHoursWindow:onClose()
 	return true
 end
 
+function ReadingHoursWindow:onToggle()
+	local new_state = not (G_reader_settings:readSetting("reading_hours_show_all_days") or false)
+	G_reader_settings:saveSetting("reading_hours_show_all_days", new_state)
+	UIManager:close(self)
+	UIManager:show(ReadingHoursWindow:new(), "ui")
+end
+
 function ReadingHoursWindow:onTapClose(arg, ges_ev)
-	if self.toggle_area and ges_ev and ges_ev.pos then
-		if self.toggle_area:contains(ges_ev.pos) then
-			show_all_days_state = not show_all_days_state
-			UIManager:close(self)
-			UIManager:show(ReadingHoursWindow:new(), "ui")
-			return true
-		end
+	if self.toggle_area and ges_ev and ges_ev.pos and self.toggle_area:contains(ges_ev.pos) then
+		self:onToggle()
+	else
+		self:onClose()
 	end
-	self:onClose()
 	return true
 end
 
