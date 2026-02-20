@@ -1,5 +1,5 @@
 local logger = require("logger")
-logger.info("Applying reading hours daily patch")
+logger.info("Applying reading hours patch")
 
 local Blitbuffer = require("ffi/blitbuffer")
 local CenterContainer = require("ui/widget/container/centercontainer")
@@ -33,6 +33,7 @@ local ReadingHoursWindow = InputContainer:extend({
 })
 
 function ReadingHoursWindow:init()
+	self.show_all_days = G_reader_settings:readSetting("reading_hours_show_all_days") or false
 	local screen_width = Screen:getWidth()
 	local screen_height = Screen:getHeight()
 	local w_width = math.floor(screen_width * 0.7)
@@ -94,8 +95,9 @@ function ReadingHoursWindow:init()
 			return nil, "Statistics database not found"
 		end
 
-		local cutoff_days = 180
-		local cutoff_time = os.time() - (cutoff_days * 86400)
+		local seconds_in_day = 86400
+		local days_to_show = 30
+		local cutoff_time = os.time() - (days_to_show * seconds_in_day)
 
 		local sql_stmt = string.format(
 			[[
@@ -105,29 +107,44 @@ function ReadingHoursWindow:init()
                 FROM page_stat
                 WHERE start_time > %d
                 GROUP BY date
-                ORDER BY date DESC
-                LIMIT 30;
-        ]],
+                ORDER BY date DESC;
+            ]],
 			cutoff_time
 		)
 
-		local ok, result = pcall(conn.exec, conn, sql_stmt)
+		local ok, pre_result = pcall(conn.exec, conn, sql_stmt)
 		conn:close()
 
-		if not ok or not result or not result.date then
+		if not ok or not pre_result or not pre_result.date then
 			return nil, "Failed to query statistics database"
 		end
 
+		local lookup = {}
+		for i = 1, #pre_result.date do
+			lookup[tostring(pre_result.date[i])] = tonumber(pre_result.seconds[i])
+		end
+
+		local required_dates = {}
+		local tm = os.time()
+		for i = 1, days_to_show do
+			local date_str = os.date("%Y-%m-%d", tm)
+			local seconds = lookup[date_str] or 0
+			if self.show_all_days or seconds > 0 then
+				table.insert(required_dates, { date_str, seconds })
+			end
+			tm = tm - seconds_in_day
+		end
+
 		local max_seconds = 0
-		for i = 1, #result.seconds do
-			local secs = tonumber(result.seconds[i])
-			if secs and secs > max_seconds then
+		for _, entry in ipairs(required_dates) do
+			local secs = entry[2]
+			if secs > max_seconds then
 				max_seconds = secs
 			end
 		end
 
 		if max_seconds == 0 then
-			return nil, "No reading statistics available"
+			max_seconds = 1
 		end
 
 		local scrollbar_width = ScrollableContainer:getScrollbarWidth()
@@ -135,57 +152,55 @@ function ReadingHoursWindow:init()
 		local bar_max_width = content_width - Screen:scaleBySize(140)
 		local rows = VerticalGroup:new({})
 
-		for i = 1, #result.date do
-			local date_str = tostring(result.date[i])
-			local seconds = tonumber(result.seconds[i])
+		for _, entry in ipairs(required_dates) do
+			local date_str = entry[1]
+			local seconds = entry[2]
 
-			if date_str and seconds then
-				local timestamp = os.time({
-					year = tonumber(date_str:sub(1, 4)),
-					month = tonumber(date_str:sub(6, 7)),
-					day = tonumber(date_str:sub(9, 10)),
-					hour = 0,
-					min = 0,
-					sec = 0,
-				})
-				local date_label = os.date("%b %d", timestamp)
-				local time_str = secsToTimestring(seconds)
+			local timestamp = os.time({
+				year = tonumber(date_str:sub(1, 4)),
+				month = tonumber(date_str:sub(6, 7)),
+				day = tonumber(date_str:sub(9, 10)),
+				hour = 0,
+				min = 0,
+				sec = 0,
+			})
+			local date_label = os.date("%b %d", timestamp)
+			local time_str = seconds == 0 and "---" or secsToTimestring(seconds)
 
-				local date_widget = textt(date_label, w_font.size.small, w_font.color.black)
-				local time_widget = textt(time_str, w_font.size.small, w_font.color.black)
+			local date_widget = textt(date_label, w_font.size.small, w_font.color.black)
+			local time_widget = textt(time_str, w_font.size.small, w_font.color.black)
 
-				local bar = ProgressWidget:new({
-					width = bar_max_width,
-					height = Screen:scaleBySize(10),
-					percentage = seconds / max_seconds,
-					ticks = nil,
-					last = nil,
-					margin_h = 0,
-					margin_v = 0,
-					radius = Screen:scaleBySize(3),
-					bordersize = 0,
-					bgcolor = Blitbuffer.COLOR_WHITE,
-					fillcolor = Blitbuffer.COLOR_BLACK,
-				})
+			local bar = ProgressWidget:new({
+				width = bar_max_width,
+				height = Screen:scaleBySize(10),
+				percentage = seconds / max_seconds,
+				ticks = nil,
+				last = nil,
+				margin_h = 0,
+				margin_v = 0,
+				radius = Screen:scaleBySize(3),
+				bordersize = 0,
+				bgcolor = Blitbuffer.COLOR_WHITE,
+				fillcolor = Blitbuffer.COLOR_BLACK,
+			})
 
-				local row = HorizontalGroup:new({
-					align = "center",
-					LeftContainer:new({
-						dimen = Geom:new({ w = Screen:scaleBySize(60), h = Screen:scaleBySize(20) }),
-						date_widget,
-					}),
-					HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
-					bar,
-					HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
-					LeftContainer:new({
-						dimen = Geom:new({ w = Screen:scaleBySize(50), h = Screen:scaleBySize(20) }),
-						time_widget,
-					}),
-				})
+			local row = HorizontalGroup:new({
+				align = "center",
+				LeftContainer:new({
+					dimen = Geom:new({ w = Screen:scaleBySize(60), h = Screen:scaleBySize(20) }),
+					date_widget,
+				}),
+				HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
+				bar,
+				HorizontalSpan:new({ width = Screen:scaleBySize(10) }),
+				LeftContainer:new({
+					dimen = Geom:new({ w = Screen:scaleBySize(50), h = Screen:scaleBySize(20) }),
+					time_widget,
+				}),
+			})
 
-				table.insert(rows, row)
-				table.insert(rows, vertical_spacing(0.5))
-			end
+			table.insert(rows, row)
+			table.insert(rows, vertical_spacing(0.5))
 		end
 
 		local icon_size = Screen:scaleBySize(30)
@@ -199,15 +214,34 @@ function ReadingHoursWindow:init()
 			width = icon_size,
 			height = icon_size,
 		})
-		local title = HorizontalGroup:new({
-			align = "center",
+
+		local toggle_button = IconWidget:new({
+			icon = "appbar.contrast",
+			width = icon_size,
+			height = icon_size,
+			rotation_angle = self.show_all_days and 180 or 0,
+		})
+
+		local center_icons = HorizontalGroup:new({
 			icon1,
 			HorizontalSpan:new({ width = Screen:scaleBySize(5) }),
 			icon2,
 		})
 
+		local icons_width = center_icons:getSize().w
+		local toggle_width = toggle_button:getSize().w
+		local total_content = icons_width + toggle_width
+		local left_spacer = (content_width - total_content) / 2
+
+		local title = HorizontalGroup:new({
+			HorizontalSpan:new({ width = left_spacer }),
+			center_icons,
+			HorizontalSpan:new({ width = left_spacer }),
+			toggle_button,
+		})
+
 		local row_height = Screen:scaleBySize(20) + math.floor(w_padding.internal * 0.5)
-		local num_items = #result.date
+		local num_items = #required_dates
 		local scrollable_height
 		if num_items <= 10 then
 			scrollable_height = num_items * row_height
@@ -258,6 +292,16 @@ function ReadingHoursWindow:init()
 		h = screen_height,
 	})
 
+	local frame_dimen = frame:getSize()
+	local toggle_size = Screen:scaleBySize(30)
+	local toggle_padding = w_padding.external
+	self.toggle_area = Geom:new({
+		x = (screen_width - frame_dimen.w) / 2 + frame_dimen.w - toggle_size - toggle_padding,
+		y = (screen_height - frame_dimen.h) / 2 + toggle_padding,
+		w = toggle_size + toggle_padding,
+		h = toggle_size + toggle_padding,
+	})
+
 	if Device:hasDPad() then
 		self.key_events.Close = { { Device.input.group.Back } }
 	end
@@ -283,8 +327,19 @@ function ReadingHoursWindow:onClose()
 	return true
 end
 
-function ReadingHoursWindow:onTapClose()
-	self:onClose()
+function ReadingHoursWindow:onToggle()
+	local new_state = not self.show_all_days
+	G_reader_settings:saveSetting("reading_hours_show_all_days", new_state)
+	UIManager:close(self)
+	UIManager:show(ReadingHoursWindow:new(), "ui")
+end
+
+function ReadingHoursWindow:onTapClose(arg, ges_ev)
+	if ges_ev and ges_ev.pos and self.toggle_area:contains(ges_ev.pos) then
+		self:onToggle()
+	else
+		self:onClose()
+	end
 	return true
 end
 
@@ -300,4 +355,4 @@ function ReaderUI:onShowReadingHoursDaily()
 	UIManager:show(widget, "ui", widget.dimen)
 end
 
-logger.info("Reading hours daily patch applied")
+logger.info("Reading hours patch applied")
