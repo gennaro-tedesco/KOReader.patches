@@ -1,5 +1,5 @@
 local logger = require("logger")
-logger.info("Applying reading hours daily patch")
+logger.info("Applying reading hours patch")
 
 local Blitbuffer = require("ffi/blitbuffer")
 local CenterContainer = require("ui/widget/container/centercontainer")
@@ -232,12 +232,11 @@ function ReadingHoursWindow:init()
 		local toggle_width = toggle_button:getSize().w
 		local total_content = icons_width + toggle_width
 		local left_spacer = (content_width - total_content) / 2
-		local right_spacer = left_spacer
 
 		local title = HorizontalGroup:new({
 			HorizontalSpan:new({ width = left_spacer }),
 			center_icons,
-			HorizontalSpan:new({ width = right_spacer }),
+			HorizontalSpan:new({ width = left_spacer }),
 			toggle_button,
 		})
 
@@ -329,14 +328,14 @@ function ReadingHoursWindow:onClose()
 end
 
 function ReadingHoursWindow:onToggle()
-	local new_state = not (G_reader_settings:readSetting("reading_hours_show_all_days") or false)
+	local new_state = not self.show_all_days
 	G_reader_settings:saveSetting("reading_hours_show_all_days", new_state)
 	UIManager:close(self)
 	UIManager:show(ReadingHoursWindow:new(), "ui")
 end
 
 function ReadingHoursWindow:onTapClose(arg, ges_ev)
-	if self.toggle_area and ges_ev and ges_ev.pos and self.toggle_area:contains(ges_ev.pos) then
+	if ges_ev and ges_ev.pos and self.toggle_area:contains(ges_ev.pos) then
 		self:onToggle()
 	else
 		self:onClose()
@@ -356,4 +355,4 @@ function ReaderUI:onShowReadingHoursDaily()
 	UIManager:show(widget, "ui", widget.dimen)
 end
 
-logger.info("Reading hours daily patch applied")
+logger.info("Reading hours patch applied")
