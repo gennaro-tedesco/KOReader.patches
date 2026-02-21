@@ -80,7 +80,7 @@ The patch also includes a toggle to show/hide days with empty statistics, for in
 <details>
   <summary>Show toggle</summary>
 
-<img width="400" src="https://github.com/user-attachments/assets/4a7c9e75-f22c-4883-a901-70e67ebb2e24">
+<img width="400" src="https://github.com/user-attachments/assets/a639d960-c948-49b2-adb6-6dbf46e8c28b">
 </details>
 
 use `icons/appbar.contrast.svg` as icon.
