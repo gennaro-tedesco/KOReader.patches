@@ -72,3 +72,15 @@ Similar to the aforementioned `2-stats.lua` patch, this one provides a barplot o
 
 <img width="400" src="https://github.com/user-attachments/assets/31409e95-1306-4c02-bb97-e7d4474de34e">
 </details>
+
+The patch also includes a toggle to show/hide days with empty statistics, for instance
+
+### Show toggle
+
+<details>
+  <summary>Show toggle</summary>
+
+<img width="400" src="https://github.com/user-attachments/assets/4a7c9e75-f22c-4883-a901-70e67ebb2e24">
+</details>
+
+use `icons/appbar.contrast.svg` as icon.
