@@ -346,11 +346,14 @@ end
 Dispatcher:registerAction("show_reading_hours_daily", {
 	category = "none",
 	event = "ShowReadingHoursDaily",
-	title = _("reading times stats"),
+	title = _("Reading times stats"),
 	general = true,
 })
 
 function ReaderUI:onShowReadingHoursDaily()
+	if self.statistics then
+		self.statistics:insertDB()
+	end
 	local widget = ReadingHoursWindow:new()
 	UIManager:show(widget, "ui", widget.dimen)
 end
