@@ -117,6 +117,37 @@ applyUIFont()
 -- 3. DICTIONARY FONT LOGIC
 --------------------------------------------------------------------------------
 
+local original_instantiateScrollWidget = DictQuickLookup._instantiateScrollWidget
+
+function DictQuickLookup:_instantiateScrollWidget()
+	original_instantiateScrollWidget(self)
+
+	local selected_font = G_reader_settings:readSetting("dict_font")
+	if not selected_font then
+		return
+	end
+
+	local cre = require("document/credocument"):engineInit()
+	local font_filename = cre.getFontFaceFilenameAndFaceIndex(selected_font)
+	if not font_filename then
+		return
+	end
+
+	if self.dict_title then
+		local font_size = Font.sizemap.x_smallinfofont
+		self.dict_title.title_face = Font:getFace(font_filename, font_size)
+		self.dict_title:clear()
+		self.dict_title:init()
+		UIManager:setDirty(self.dict_title.show_parent, "ui", self.dict_title.dimen)
+	end
+
+	if self.lookup_word_text and self.lookup_word_text.face then
+		self.lookup_word_text.face = Font:getFace(font_filename, self.lookup_word_text.face.orig_size)
+		self.lookup_word_text._face_adjusted = false
+		self.lookup_word_text:free()
+	end
+end
+
 local original_getHtmlDictionaryCss = DictQuickLookup.getHtmlDictionaryCss
 
 function DictQuickLookup:getHtmlDictionaryCss()
@@ -126,16 +157,6 @@ function DictQuickLookup:getHtmlDictionaryCss()
 		local cre = require("document/credocument"):engineInit()
 		local font_filename, font_faceindex = cre.getFontFaceFilenameAndFaceIndex(selected_font)
 		if font_filename then
-			local font_size = Font.sizemap.x_smallinfofont
-			self.dict_title.title_face = Font:getFace(font_filename, font_size)
-			self.dict_title:clear()
-			self.dict_title:init()
-			UIManager:setDirty(self.dict_title.show_parent, "ui", self.dict_title.dimen)
-
-			self.lookup_word_text.face = Font:getFace(font_filename, self.lookup_word_text.face.orig_size)
-			self.lookup_word_text._face_adjusted = false
-			self.lookup_word_text:free()
-
 			local css_justify = G_reader_settings:nilOrTrue("dict_justify") and "text-align: justify;" or ""
 			local face_css = "@font-face { font-family: 'DictCustomFont'; src: url('" .. font_filename .. "') }\n"
 			local seen = { [font_filename] = true }
