@@ -126,6 +126,13 @@ function DictQuickLookup:getHtmlDictionaryCss()
 		local cre = require("document/credocument"):engineInit()
 		local font_filename, font_faceindex = cre.getFontFaceFilenameAndFaceIndex(selected_font)
 		if font_filename then
+			if self.dict_title then
+				local font_size = Font.sizemap.x_smallinfofont
+				self.dict_title.title_face = Font:getFace(font_filename, font_size)
+				self.dict_title:clear()
+				self.dict_title:init()
+				UIManager:setDirty(self.dict_title.show_parent, "ui", self.dict_title.dimen)
+			end
 			local css_justify = G_reader_settings:nilOrTrue("dict_justify") and "text-align: justify;" or ""
 			local face_css = "@font-face { font-family: 'DictCustomFont'; src: url('" .. font_filename .. "') }\n"
 			local seen = { [font_filename] = true }
