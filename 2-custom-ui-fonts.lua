@@ -117,6 +117,37 @@ applyUIFont()
 -- 3. DICTIONARY FONT LOGIC
 --------------------------------------------------------------------------------
 
+local original_instantiateScrollWidget = DictQuickLookup._instantiateScrollWidget
+
+function DictQuickLookup:_instantiateScrollWidget()
+	original_instantiateScrollWidget(self)
+
+	local selected_font = G_reader_settings:readSetting("dict_font")
+	if not selected_font then
+		return
+	end
+
+	local cre = require("document/credocument"):engineInit()
+	local font_filename = cre.getFontFaceFilenameAndFaceIndex(selected_font)
+	if not font_filename then
+		return
+	end
+
+	if self.dict_title then
+		local font_size = Font.sizemap.x_smallinfofont
+		self.dict_title.title_face = Font:getFace(font_filename, font_size)
+		self.dict_title:clear()
+		self.dict_title:init()
+		UIManager:setDirty(self.dict_title.show_parent, "ui", self.dict_title.dimen)
+	end
+
+	if self.lookup_word_text and self.lookup_word_text.face then
+		self.lookup_word_text.face = Font:getFace(font_filename, self.lookup_word_text.face.orig_size)
+		self.lookup_word_text._face_adjusted = false
+		self.lookup_word_text:free()
+	end
+end
+
 local original_getHtmlDictionaryCss = DictQuickLookup.getHtmlDictionaryCss
 
 function DictQuickLookup:getHtmlDictionaryCss()
@@ -250,18 +281,11 @@ end
 
 -- Inject into menu order (Unified)
 local menu_order = require("ui/elements/reader_menu_order")
-local original_typeset_order = {}
-for i, v in ipairs(menu_order.typeset) do
-	original_typeset_order[i] = v
-end
-
-menu_order.typeset = {}
-for i, item_id in ipairs(original_typeset_order) do
-	table.insert(menu_order.typeset, item_id)
+for i, item_id in ipairs(menu_order.typeset) do
 	if item_id == "change_font" then
-		-- Add both items right after the main font change
-		table.insert(menu_order.typeset, "dictionary_font")
-		table.insert(menu_order.typeset, "ui_font")
+		table.insert(menu_order.typeset, i + 1, "ui_font")
+		table.insert(menu_order.typeset, i + 1, "dictionary_font")
+		break
 	end
 end
 
