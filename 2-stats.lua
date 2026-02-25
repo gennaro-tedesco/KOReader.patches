@@ -134,17 +134,23 @@ function quicklookwindow:init()
 
 	-- HELPER FUNCTIONS
 
-	local function secsToTimestring(secs) -- seconds to 'x hrs y mins' format
+	local function secsToTimestring(secs) -- seconds to 'x days y hrs z mins' format
 		local timestring = ""
 
 		local h = math.floor(secs / 3600)
 		local m = math.floor((secs % 3600) / 60)
+		local d = math.floor(h / 24)
+		h = h % 24
+		local d_str = T(N_("1 day", "%1 days", d), d)
 		local h_str = T(N_("1 hr", "%1 hrs", h), h)
 		local m_str = T(N_("1 min", "%1 mins", m), m)
 
-		if h == 0 and m < 1 then
+		if d == 0 and h == 0 and m < 1 then
 			return "less than a minute"
 		else
+			if d >= 1 then
+				timestring = timestring .. d_str .. " "
+			end
 			if h >= 1 then
 				timestring = timestring .. h_str .. " "
 			end
