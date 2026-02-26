@@ -4,7 +4,7 @@
 
 ### A collection of personal patches for KOReader
 
-### [2-tidy-dict](2-tidy-dict.lua)
+### [2-tidy-dict](patches/2-tidy-dict.lua)
 
 This patch renders the dictionary popup more tidily, only showing the "Highlight" and "Translation" buttons (normaly hidden behind few more clicks) and re-draws previous/next arrows with counter in the between.
 
@@ -16,7 +16,7 @@ This patch renders the dictionary popup more tidily, only showing the "Highlight
 <img width="400" src="https://github.com/user-attachments/assets/d2b235ca-c73f-4c1e-a124-1c67ece87946">
 </details>
 
-### [2-distributed-progress-bar](2-distributed-progress-bar.lua)
+### [2-distributed-progress-bar](patches/2-distributed-progress-bar.lua)
 
 This patch distributes the progress bar elements in the footer so that they are equally spaced and justified. Notice that for this patch to work you need to remove the "Dynamic filler" element (generally used to achieve spacing in the footer).
 
@@ -28,7 +28,7 @@ This patch distributes the progress bar elements in the footer so that they are 
 <img width="400" src="https://github.com/user-attachments/assets/3330bfcd-ff6f-4572-b234-bef6b084504e">
 </details>
 
-### [2-custom-ui-fonts](2-custom-ui-fonts.lua)
+### [2-custom-ui-fonts](patches/2-custom-ui-fonts.lua)
 
 This patch changes the fonts for the general UI menu appearance together with the dictionary body text by hooking into the style css directly. Two new menu entries are introduced to allow the user to select book text, UI and dictionary fonts independently
 
@@ -41,15 +41,15 @@ This patch changes the fonts for the general UI menu appearance together with th
 <img width="400" src="https://github.com/user-attachments/assets/e143d677-53e8-4931-9dbc-81635d5347be">
 </details>
 
-### [2-footer-glyphs](2-footer-glyphs.lua)
+### [2-footer-glyphs](patches/2-footer-glyphs.lua)
 
 This patch allows to change the glyphs used as icons for the progress bar elements. Change at your will modifying the source file.
 
-### [2-delete-bookmarks](2-delete-bookmarks.lua)
+### [2-delete-bookmarks](patches/2-delete-bookmarks.lua)
 
 This patch adds a new button in the bookmarks menu to delete all bookmarks at once. Consider adding the corresponding icon from `icons/delete-bookmarks.svg`
 
-### [2-stats](2-stats.lua)
+### [2-stats](patches/2-stats.lua)
 
 This patch is my personal version of the original by [zenixlabs](https://github.com/zenixlabs/koreader-frankenpatches-public) where I have adapted and simplified the UI to my liking. For this patch to work do not forget to download the icons `icons/chapter.svg`, `icons/book_progress.svg` and `icons/reading.svg`. The suggested way to use such patch is to assign it a gesture from the gestures menu (I use spreach and pinch).
 
@@ -61,7 +61,7 @@ This patch is my personal version of the original by [zenixlabs](https://github.
 <img width="400" src="https://github.com/user-attachments/assets/2dbd8bda-a89b-4a4f-bd39-d18b800b5eb4">
 </details>
 
-### [2-reading-stats](2-reading-stats.lua)
+### [2-reading-stats](patches/2-reading-stats.lua)
 
 Similar to the aforementioned `2-stats.lua` patch, this one provides a barplot of the aggregated reading time in the last days. For this patch to work do not forget to download the icons `icons/calendar.svg`, and `icons/reading.svg`. The suggested way to use such patch is to assign it a gesture from the gestures menu (I use spreach and pinch).
 
