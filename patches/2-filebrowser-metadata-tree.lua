@@ -1,8 +1,10 @@
 local logger = require("logger")
 logger.info("Applying file browser metadata tree patch")
 
+local Archiver = require("ffi/archiver")
 local userpatch = require("userpatch")
 local BookList = require("ui/widget/booklist")
+local BookInfo = require("apps/filemanager/filemanagerbookinfo")
 local FileChooser = require("ui/widget/filechooser")
 local DocSettings = require("docsettings")
 local ffiUtil = require("ffi/util")
@@ -10,6 +12,60 @@ local _ = require("gettext")
 local T = ffiUtil.template
 
 local sentinel = "\u{FFFF}"
+
+local function decodeXmlEntities(s)
+	return (s:gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", '"'):gsub("&apos;", "'"):gsub("&amp;", "&"))
+end
+
+local function getPropsFromEpub(filepath)
+	local reader = Archiver.Reader:new()
+	if not reader:open(filepath) then
+		return nil
+	end
+	for i in reader:iterate() do
+	end
+	local container = reader:extractToMemory("META-INF/container.xml")
+	if not container then
+		reader:close()
+		return nil
+	end
+	local opf_path = container:match('full%-path="([^"]+)"')
+	if not opf_path then
+		reader:close()
+		return nil
+	end
+	local opf = reader:extractToMemory(opf_path)
+	reader:close()
+	if not opf then
+		return nil
+	end
+	local props = {}
+	local raw_title = opf:match("<dc:title[^>]*>%s*(.-)%s*</dc:title>")
+	props.title = raw_title and decodeXmlEntities(raw_title) or nil
+	local creators = {}
+	for creator in opf:gmatch("<dc:creator[^>]*>%s*(.-)%s*</dc:creator>") do
+		if creator ~= "" then
+			table.insert(creators, decodeXmlEntities(creator))
+		end
+	end
+	if #creators > 0 then
+		props.authors = table.concat(creators, "\n")
+	end
+	props.language = opf:match("<dc:language[^>]*>%s*(.-)%s*</dc:language>")
+	local raw_series = opf:match('<meta%s+name="calibre:series"%s+content="([^"]+)"')
+		or opf:match('<meta%s+content="([^"]+)"%s+name="calibre:series"')
+	props.series = raw_series and decodeXmlEntities(raw_series) or nil
+	local subjects = {}
+	for subject in opf:gmatch("<dc:subject[^>]*>%s*(.-)%s*</dc:subject>") do
+		if subject ~= "" then
+			table.insert(subjects, decodeXmlEntities(subject))
+		end
+	end
+	if #subjects > 0 then
+		props.keywords = table.concat(subjects, "\n")
+	end
+	return props
+end
 
 local folded_groups = {}
 
@@ -200,6 +256,10 @@ function FileChooser:genItemTable(dirs, files, path)
 			table.insert(preamble, item)
 		else
 			local props = DocSettings:open(item.path):readSetting("doc_props")
+			if not props and item.path:lower():match("%.epub$") then
+				props = getPropsFromEpub(item.path)
+			end
+			props = BookInfo.extendProps(props, item.path)
 			item.doc_props = props
 			item.orig_text = item.text
 			local raw = props and props[group_by]
