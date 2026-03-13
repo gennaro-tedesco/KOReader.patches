@@ -87,4 +87,10 @@ use `icons/appbar.contrast.svg` as icon.
 
 ### [2-filebrowser-metadata-tree](patches/2-filebrowser-metadata-tree.lua)
 
-This patch introduces a tree view for the filebrowser whereby entries are grouped by metadata tags.
+This patch introduces a tree view for the filebrowser whereby entries are grouped by metadata tags. You can choose to display file trees grouped by author, series, language and general tags.
+
+<details>
+  <summary>Show toggle</summary>
+
+<img width="400" src="https://github.com/user-attachments/assets/8148a512-6a87-419f-a0d8-ce50f3d2cea4">
+</details>
