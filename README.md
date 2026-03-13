@@ -84,3 +84,7 @@ The patch also includes a toggle to show/hide days with empty statistics, for in
 </details>
 
 use `icons/appbar.contrast.svg` as icon.
+
+### [2-filebrowser-metadata-tree](patches/2-filebrowser-metadata-tree.lua)
+
+This patch introduces a tree view for the filebrowser whereby entries are grouped by metadata tags.
