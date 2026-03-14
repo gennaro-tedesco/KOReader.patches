@@ -1,5 +1,5 @@
 local logger = require("logger")
-logger.info("Applying file browser metadata tree patch")
+logger.info("Applying file browser metadata view patch")
 
 local Archiver = require("ffi/archiver")
 local userpatch = require("userpatch")
@@ -12,6 +12,7 @@ local _ = require("gettext")
 local T = ffiUtil.template
 
 local sentinel = "\u{FFFF}"
+local unknown_key = _("Unknown")
 
 local function decodeXmlEntities(s)
 	return (s:gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", '"'):gsub("&apos;", "'"):gsub("&amp;", "&"))
@@ -22,7 +23,7 @@ local function getPropsFromEpub(filepath)
 	if not reader:open(filepath) then
 		return nil
 	end
-	for i in reader:iterate() do
+	for _ in reader:iterate() do
 	end
 	local container = reader:extractToMemory("META-INF/container.xml")
 	if not container then
@@ -41,7 +42,7 @@ local function getPropsFromEpub(filepath)
 	end
 	local props = {}
 	local raw_title = opf:match("<dc:title[^>]*>%s*(.-)%s*</dc:title>")
-	props.title = raw_title and decodeXmlEntities(raw_title) or nil
+	props.title = raw_title and decodeXmlEntities(raw_title)
 	local creators = {}
 	for creator in opf:gmatch("<dc:creator[^>]*>%s*(.-)%s*</dc:creator>") do
 		if creator ~= "" then
@@ -54,7 +55,7 @@ local function getPropsFromEpub(filepath)
 	props.language = opf:match("<dc:language[^>]*>%s*(.-)%s*</dc:language>")
 	local raw_series = opf:match('<meta%s+name="calibre:series"%s+content="([^"]+)"')
 		or opf:match('<meta%s+content="([^"]+)"%s+name="calibre:series"')
-	props.series = raw_series and decodeXmlEntities(raw_series) or nil
+	props.series = raw_series and decodeXmlEntities(raw_series)
 	local subjects = {}
 	for subject in opf:gmatch("<dc:subject[^>]*>%s*(.-)%s*</dc:subject>") do
 		if subject ~= "" then
@@ -86,7 +87,7 @@ local function buildItemList(cache)
 		table.insert(result, item)
 	end
 	for _, group in ipairs(cache.groups) do
-		local folded = folded_groups[group.key]
+		local folded = folded_groups[group.key] ~= false
 		table.insert(result, {
 			text = (folded and "\u{25B6} " or "\u{25BC} ") .. group.key,
 			path = cache.dir,
@@ -97,7 +98,6 @@ local function buildItemList(cache)
 		if not folded then
 			for _, item in ipairs(group.items) do
 				local title = (item.doc_props and item.doc_props.title) or item.orig_text or item.text
-				item.orig_text = item.orig_text or item.text
 				item.text = "    " .. title
 				table.insert(result, item)
 			end
@@ -262,14 +262,14 @@ function FileChooser:genItemTable(dirs, files, path)
 			props = BookInfo.extendProps(props, item.path)
 			item.doc_props = props
 			item.orig_text = item.text
-			local raw = props and props[group_by]
+			local raw = props[group_by]
 			local keys
 			if not raw or raw == sentinel or raw == "" then
-				keys = { _("Unknown") }
+				keys = { unknown_key }
 			else
 				keys = split_metadata(raw)
 				if #keys == 0 then
-					keys = { _("Unknown") }
+					keys = { unknown_key }
 				end
 			end
 			local seen_keys = {}
@@ -286,6 +286,16 @@ function FileChooser:genItemTable(dirs, files, path)
 		end
 	end
 
+	table.sort(groups, function(a, b)
+		if a.key == unknown_key then
+			return false
+		end
+		if b.key == unknown_key then
+			return true
+		end
+		return a.key < b.key
+	end)
+
 	self._dir_groups = { dir = dir, group_by = group_by, preamble = preamble, groups = groups }
 	return buildItemList(self._dir_groups)
 end
@@ -293,7 +303,11 @@ end
 local orig_onMenuSelect = FileChooser.onMenuSelect
 function FileChooser:onMenuSelect(item)
 	if item.is_header then
-		folded_groups[item.group_key] = not folded_groups[item.group_key] or nil
+		if folded_groups[item.group_key] == false then
+			folded_groups[item.group_key] = nil
+		else
+			folded_groups[item.group_key] = false
+		end
 		if self._dir_groups then
 			self:switchItemTable(nil, buildItemList(self._dir_groups))
 		else
@@ -304,4 +318,4 @@ function FileChooser:onMenuSelect(item)
 	return orig_onMenuSelect(self, item)
 end
 
-logger.info("File browser metadata tree patch applied")
+logger.info("File browser metadata view patch applied")
