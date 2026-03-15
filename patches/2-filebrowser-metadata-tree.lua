@@ -1,7 +1,9 @@
 local logger = require("logger")
-logger.info("Applying file browser metadata view patch")
+logger.info("Applying file browser tree view patch")
 
 local Archiver = require("ffi/archiver")
+local FileManager = require("apps/filemanager/filemanager")
+local IconButton = require("ui/widget/iconbutton")
 local userpatch = require("userpatch")
 local BookList = require("ui/widget/booklist")
 local BookInfo = require("apps/filemanager/filemanagerbookinfo")
@@ -126,6 +128,11 @@ if G_reader_settings:isTrue("metadata_tree_active") then
 end
 
 userpatch.registerPatchPluginFunc("coverbrowser", function(plugin)
+	if plugin._tree_view_patched then
+		return
+	end
+	plugin._tree_view_patched = true
+
 	local setting_metadata_mode = false
 
 	local orig_addToMainMenu = plugin.addToMainMenu
@@ -318,4 +325,36 @@ function FileChooser:onMenuSelect(item)
 	return orig_onMenuSelect(self, item)
 end
 
-logger.info("File browser metadata view patch applied")
+local orig_setupLayout = FileManager.setupLayout
+function FileManager:setupLayout()
+	orig_setupLayout(self)
+	local rb = self.title_bar.right_button
+	local orig_padding_right = rb.padding_right
+	if self.title_bar.subtitle_widget then
+		local extra = rb.width + rb.padding
+		self.title_bar.subtitle_widget:setMaxWidth(self.title_bar.subtitle_widget.max_width - extra)
+		self.title_bar:setSubTitle(self.title_bar.subtitle or "", true)
+	end
+	rb.padding_right = orig_padding_right + rb.width + rb.padding
+	rb:update()
+	table.insert(
+		self.title_bar,
+		#self.title_bar,
+		IconButton:new({
+			icon = "close",
+			width = rb.width,
+			height = rb.height,
+			padding = rb.padding,
+			padding_bottom = rb.padding_bottom,
+			padding_left = rb.padding,
+			padding_right = orig_padding_right,
+			overlap_align = "right",
+			show_parent = self.show_parent,
+			callback = function()
+				self.menu:onOpenLastDoc()
+			end,
+		})
+	)
+end
+
+logger.info("File browser tree view patch applied")
