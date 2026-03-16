@@ -55,8 +55,25 @@ local function getPropsFromEpub(filepath)
 		props.authors = table.concat(creators, "\n")
 	end
 	props.language = opf:match("<dc:language[^>]*>%s*(.-)%s*</dc:language>")
-	local raw_series = opf:match('<meta%s+name="calibre:series"%s+content="([^"]+)"')
-		or opf:match('<meta%s+content="([^"]+)"%s+name="calibre:series"')
+	local raw_series = opf:match('<[%w:]*meta%s+name="calibre:series"%s+content="([^"]+)"')
+		or opf:match('<[%w:]*meta%s+content="([^"]+)"%s+name="calibre:series"')
+	if not raw_series then
+		for id, title in
+			opf:gmatch('<[%w:]*meta%s+property="belongs%-to%-collection"%s+id="([^"]+)"[^>]*>%s*(.-)%s*</[%w:]*meta>')
+		do
+			local eid = id:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
+			local ctype = opf:match(
+				'refines="#' .. eid .. '"[^>]*property="collection%-type"[^>]*>%s*(.-)%s*</[%w:]*meta>'
+			) or opf:match('property="collection%-type"[^>]*refines="#' .. eid .. '"[^>]*>%s*(.-)%s*</[%w:]*meta>')
+			if not ctype or ctype:match("^%s*series%s*$") then
+				raw_series = title
+				break
+			end
+		end
+		if not raw_series then
+			raw_series = opf:match('<[%w:]*meta[^>]*property="belongs%-to%-collection"[^>]*>%s*(.-)%s*</[%w:]*meta>')
+		end
+	end
 	props.series = raw_series and decodeXmlEntities(raw_series)
 	local subjects = {}
 	for subject in opf:gmatch("<dc:subject[^>]*>%s*(.-)%s*</dc:subject>") do
