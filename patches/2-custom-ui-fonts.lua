@@ -56,7 +56,7 @@ local function getGenericFontTable(reader_font_instance, options)
 							ok_callback = function()
 								UIManager:nextTick(function()
 									os.execute("sleep 1")
-									UIManager:quit()
+									UIManager:restartKOReader()
 								end)
 							end,
 							cancel_text = _("Later"),
