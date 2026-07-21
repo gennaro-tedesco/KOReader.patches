@@ -94,3 +94,7 @@ This patch introduces a tree view for the filebrowser whereby entries are groupe
 
 <img width="400" src="https://github.com/user-attachments/assets/8148a512-6a87-419f-a0d8-ce50f3d2cea4">
 </details>
+
+### [2-mysticon-dict-updater](patches/2-mysticon-dict-updater.lua)
+
+This patch adds a "Check mysticon for updates" entry to the dictionary manager's sort menu. It checks the [mysticon](https://github.com/gennaro-tedesco/mysticon) StarDict dictionaries against your locally installed ones and lets you download and replace any matching dictionary in place.
