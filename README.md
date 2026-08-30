@@ -98,3 +98,7 @@ This patch introduces a tree view for the filebrowser whereby entries are groupe
 ### [2-mysticon-dict-updater](patches/2-mysticon-dict-updater.lua)
 
 This patch adds a "Check mysticon for updates" entry to the dictionary manager's sort menu. It checks the [mysticon](https://gennaro-tedesco.github.io/mysticon/) StarDict dictionaries against your locally installed ones and lets you download and replace any matching dictionary in place.
+
+### [2-statusbar-thin-chapter](patches/2-statusbar-thin-chapter.lua)
+
+A "patch of a patch" that removes a hardcoded condition to only show toc level 1 markers in the [original version](https://github.com/sebdelsol/KOReader.patches/blob/main/2-statusbar-thin-chapter.lua)
