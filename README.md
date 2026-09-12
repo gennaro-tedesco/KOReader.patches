@@ -18,7 +18,7 @@ This patch renders the dictionary popup more tidily, only showing the "Highlight
 
 ### [2-apostrophe-word-selection](patches/2-apostrophe-word-selection.lua)
 
-This patch selects words containing ASCII (`'`) or curly (`’`) apostrophes as a single word in crengine-backed documents such as EPUBs and preserves the complete word during dictionary lookup. It also prevents KOReader's language-agnostic cleanup from removing prefixes such as `l'`, `d'`, `t'`, and `qu'`; dictionaries therefore can still handle these forms through their own entries or fuzzy matching.
+This patch make apostrophes selections part of one-word instead of being boundaries, helping with selection for languages where apostrophes are part of words declensions as well as with names for custom dictionaries.
 
 ### [2-distributed-progress-bar](patches/2-distributed-progress-bar.lua)
 
