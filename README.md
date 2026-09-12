@@ -16,6 +16,10 @@ This patch renders the dictionary popup more tidily, only showing the "Highlight
 <img width="400" src="https://github.com/user-attachments/assets/d2b235ca-c73f-4c1e-a124-1c67ece87946">
 </details>
 
+### [2-apostrophe-word-selection](patches/2-apostrophe-word-selection.lua)
+
+This patch selects words containing ASCII (`'`) or curly (`’`) apostrophes as a single word in crengine-backed documents such as EPUBs and preserves the complete word during dictionary lookup. It also prevents KOReader's language-agnostic cleanup from removing prefixes such as `l'`, `d'`, `t'`, and `qu'`; dictionaries therefore can still handle these forms through their own entries or fuzzy matching.
+
 ### [2-distributed-progress-bar](patches/2-distributed-progress-bar.lua)
 
 This patch distributes the progress bar elements in the footer so that they are equally spaced and justified. Notice that for this patch to work you need to remove the "Dynamic filler" element (generally used to achieve spacing in the footer).
