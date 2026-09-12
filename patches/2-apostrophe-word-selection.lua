@@ -66,6 +66,15 @@ end
 
 LanguageSupport:registerPlugin(ApostropheWordSelection)
 
+local originalImproveWordSelection = LanguageSupport.improveWordSelection
+function LanguageSupport:improveWordSelection(selection)
+	local improved = originalImproveWordSelection(self, selection)
+	if not improved and self.document and not self.document.info.has_pages and selection.pos0 and selection.pos1 then
+		self.document:getTextFromXPointers(selection.pos0, selection.pos1, true)
+	end
+	return improved
+end
+
 local originalCleanSelection = ReaderDictionary.cleanSelection
 function ReaderDictionary:cleanSelection(text, is_sane)
 	if not text or is_sane then
