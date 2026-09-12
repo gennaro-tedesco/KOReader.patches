@@ -16,6 +16,10 @@ This patch renders the dictionary popup more tidily, only showing the "Highlight
 <img width="400" src="https://github.com/user-attachments/assets/d2b235ca-c73f-4c1e-a124-1c67ece87946">
 </details>
 
+### [2-apostrophe-word-selection](patches/2-apostrophe-word-selection.lua)
+
+This patch make apostrophes selections part of one-word instead of being boundaries, helping with selection for languages where apostrophes are part of words declensions as well as with names for custom dictionaries.
+
 ### [2-distributed-progress-bar](patches/2-distributed-progress-bar.lua)
 
 This patch distributes the progress bar elements in the footer so that they are equally spaced and justified. Notice that for this patch to work you need to remove the "Dynamic filler" element (generally used to achieve spacing in the footer).
